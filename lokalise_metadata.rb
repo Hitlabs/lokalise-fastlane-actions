@@ -26,6 +26,9 @@ module Fastlane
             filtered_metadata = filter_metadata(metadata, lokalise_metadata)
             upload_metadata(filtered_metadata) unless filtered_metadata.empty?
           end
+        when "download_lokalise"
+          metadata = get_metadata_from_lokalise()
+          save_data(params[:metadata_path], metadata)
         end
 
       end
@@ -205,6 +208,19 @@ module Fastlane
 
       end
 
+      def self.save_data(destination, metadata) 
+        metadata_key_file().each { |key, parameter|
+          metadata.each { |lang, translations|
+            if translations.empty? == false
+              translation = translations[key]
+              filename = parameter
+              FileUtils.mkdir_p("#{destination}/#{lang}")
+              File.open("#{destination}/#{lang}/#{filename}.txt", 'w') { |file| file.write(translation) }
+            end 
+          }
+        }
+      end
+
       def self.populate_hash_key_from_file(hash, key, filepath)
         begin
           text = File.read filepath
@@ -327,11 +343,11 @@ module Fastlane
                                          UI.user_error! "Override translation should be true or false" unless [true, false].include? value
                                        end),
           FastlaneCore::ConfigItem.new(key: :action,
-                                       description: "Action to perform (can be update_lokalise or update_itunes)",
+                                       description: "Action to perform (can be update_lokalise, update_itunes, or download_lokalise)",
                                        optional: false,
                                        is_string: true,
                                        verify_block: proc do |value|
-                                         UI.user_error! "Action should be update_lokalise or update_itunes" unless ["update_lokalise", "update_itunes"].include? value
+                                         UI.user_error! "Action should be update_lokalise, update_itunes, or download_lokalise" unless ["update_lokalise", "update_itunes", "download_lokalise"].include? value
                                        end),
           FastlaneCore::ConfigItem.new(key: :metadata_path,
                                        description: "Path to Deliver's metadata directory",
