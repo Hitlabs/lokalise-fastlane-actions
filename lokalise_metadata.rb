@@ -13,7 +13,7 @@ module Fastlane
           metadata = get_metadata_from_lokalise()
           run_deliver_action(metadata)
         when "update_lokalise"
-          metadata = get_metadata()
+          metadata = get_metadata(params[:metadata_path])
           add_languages = params[:add_languages]
           override_translation = params[:override_translation]
           if add_languages == true 
@@ -154,12 +154,12 @@ module Fastlane
         end
       end
 
-      def self.get_metadata()
+      def self.get_metadata(metadata_path)
         available_languages = itunes_connect_languages
         complete_metadata = {}
 
         available_languages.each { |iso_code|
-          language_directory = "fastlane/metadata/#{iso_code}"
+          language_directory = "#{metadata_path}/#{iso_code}"
           if Dir.exist? language_directory
             language_metadata = {}
             metadata_key_file().each { |key, file|
@@ -333,6 +333,11 @@ module Fastlane
                                        verify_block: proc do |value|
                                          UI.user_error! "Action should be update_lokalise or update_itunes" unless ["update_lokalise", "update_itunes"].include? value
                                        end),
+          FastlaneCore::ConfigItem.new(key: :metadata_path,
+                                       description: "Path to Deliver's metadata directory",
+                                       optional: true,
+                                       is_string: true,
+                                       default_value: "fastlane/metadata"),
         ]
       end
 
